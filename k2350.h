@@ -1,4 +1,3 @@
-#pragma romdata flash_shuffle = 0x0e0fa
 rom unsigned short KSC2KSSM[2350][2] = {
         { 0xb0a1, 0x8861 },
         { 0xb0a2, 0x8862 },

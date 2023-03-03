@@ -24,8 +24,7 @@
 	//---------------------------------------------------------------------------
 	
 	// 초성 : 자음(14) + 쌍자음(5) = 19 개
-	//#pragma romdata flash_cho = 0x0e090
-	u08 table_cho[21] =
+	rom u08 table_cho[21] =
 		//{2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
 		
 		{1, 2,17,3, 4,5,18,6,  7, 8,9,19,10,  11,16,12  ,13,14,20,15, 
@@ -35,8 +34,7 @@
 		//{0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
 	
 	// 중성 : 자음(10) + 쌍자음(11) = 21 개
-	//#pragma romdata flash_joong = 0xE0A6
-	u08 table_joong[] = //[30]
+	rom u08 table_joong[] = //[30]
 		//{3,4,5,6,7,0,0,10,11,12,13,14,15,0,0,18,19,20,21,22,23,0,0,26,27,28,29,0};
 	//  0  , ㅏㅑ  ㅓ ㅕ ㅗㅛ   ㅜㅠ   ㅡ  ㅣ 
 		{2,  3,5,  7,11,  13,19, 20,26 ,27, 29,		 
@@ -44,38 +42,15 @@
 		  4,  6,10,12,14,15,18,21,22,23};//11~20
 		//ㅐ ㅒ ㅔ ㅖ ㅘ ㅙ ㅚ ㅝ ㅟ  ㅢ
 	// 종성 : 자음(14) + 쌍자음(11) + 쌍자음(2) = 27 개
-	//#pragma romdata flash_jong = 0xE0D6
-	u08 table_jong[30] =
+	rom u08 table_jong[30] =
 		//{2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,0,17,18,19,20,21,22,23,24,25,26,27,28,29};
 		{1, 2, 26 ,3 , 5,8,27,  9, 17,19,28,  21,25,22,  24,23,29,
       // 0  ㄱ ㅋ ㄲ  ㄴㄷㅌ   ㄹ  ㅁㅂㅍ    ㅅㅊㅆ     ㅈㅇㅎ
 		 4,   6 , 7, 11, 12 ,15, 13, 14 ,16 ,20};
 		//ㄳ  ㄵ ㄶ ㄻ ㄼ ㄿ ㄽ ㄾ ㅀ ㅄ 
 
-u08 get_keyfunc()
-{
-	static key_index=0;
-	static char key_flag =0;
-	u08 get_key=0;
+	//u08 tmp_buf2[64]={0,};
 
-	u08 key_value = (PORTB&0x10)>>4|(PORTA&0x10)>>3|(PORTA&0x20)>>3|(PORTA&0x08);
-	        
-	if(key_value==0) 
-	{			
-		if(key_index++>3) key_index =0;
-		key_read(key_index); //줄선택함수 
-		key_flag=1;
-	}
-	else{
-		
-		if(key_flag)
-		{									
-			key_flag=0;
-			get_key = 	key_value | key_index<<4;
-		}
-	}// end key routine
-	return get_key;
-}
 void init_gpio(void)
 {
 	ADCON0 = 0;
@@ -160,19 +135,11 @@ void dot_off()
 	LATH = 0xff;
 	LATD = 0xff;
 }
-
-void clr_def(Kor_1word_Def* key_data,char len)
+void test_str(Kor_1word_Def* a)
 {
-	char i;
-	for(i=0;i<len;i++)
-	{		
-		key_data[i]->kor_sung_array[0]=1;
-		key_data[i]->kor_sung_array[1]=2;
-		key_data[i]->kor_sung_array[2]=1;
-		key_data[i]->kor_font_addr=0xffff;
-		key_data[i]->only_cho_flag=1;
-		key_data[i]->ascii_font=0;	
-	}
+	char x = a[2].kor_sung_array[2];
+	
+	x++;
 }
 void Dotmatrix_output(char line,u08* data1)
 {
@@ -642,7 +609,7 @@ u16 get_kor_font4Key(u08 key,Kor_1word_Def* ch)
 void shitf_led_func(u08 *src,char index)
 {
 	char i;
-	for(i=0;i<5;i++)
+	for(i=0;i<6;i++)
 	{
 		src[i]<<=index;
 		src[i]|= src[i+1]>>(8-index);
@@ -724,31 +691,3 @@ u16 inkor2outkor(u16 kor_data)
 	return KSC2KSSM[i][0];
 }
 
-char get_kor_fontdata2(u08* buf,Kor_1word_Def *fofont)
-{
-	char j,i=0,k=0;
-	char index =0;
-	u08 kor_data[2];
-	u16 k_i;
-
-	//tmp = fofont[1]->ascii_font;	
-	do{
-		if(fofont[i]->ascii_font!=0)
-		{
-			index = get_eng_fontdata(buf,index,fofont[i]->ascii_font);
-			k+=2;
-		}
-		else if(fofont[i]->kor_font_addr!=0xffff)
-		{
-			index = get_kor_fontdata(buf,index,fofont[i]->kor_font_addr,fofont[i]->kor_sung_array[0],fofont[i]->only_cho_flag);
-			k+=3;
-		}
-		else{		
-			index = get_eng_fontdata(buf,index,' ');
-			k+=2;		
-		}
-		i++;
-	}while(k<8);
-	return k;
-
-}

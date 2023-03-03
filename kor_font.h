@@ -3,7 +3,6 @@
 // http://www.jooks8051.com.ne.kr/index.html  Program by gsjoo
 //--------------------------------------------------------------
 // 폰트: 바탕체 Size: 9 
-#pragma romdata flash_kor = 0x0048f
 rom unsigned char KS_fontTable[]={	// Font Size: 12 X 12 
  // 0 [가] 0xb0a1 ------------------------ 
 	0x7e,0x40,	// .QQQQQQ..Q..

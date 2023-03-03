@@ -162,26 +162,123 @@ void get_engFontData(u08 line,u08* buf,u08 *dst,char index,char len) //라인에 따
 	//return _ret_data;
 }	
 
+void get_eng_fontdata(u08* buf,char index,char ch1,char flag)
+{
+	char j;
+ 	u08 tmp;
+	
+	if(flag)
+	{
+		for(j=0;j<12;j++)
+		{
+			tmp = ASCII_fontTable[(ch1-0x20)*12L+j];			
+			buf[((index-1)*12)+j] |= (tmp>>4)&0x0f;
+			buf[((index)*12)+j] = (tmp)&0x0f;
+		}
+	}
+	else
+	{
+		for(j=0;j<12;j++)	
+			buf[(index*12)+j]= ASCII_fontTable[(ch1-0x20)*12L+j];
+	}
+}
 
-char get_kor_fontdata(u08* buf,char index,u16 ch,char cho,char flag)
+void get_kor_fontdata(u08* buf,char index,u16 *ch)
 {
 	char j,i;
-	char bi = index<0?(index*-1):index;
 	u08 tmp;
 	u08 kor_data[2];
 	u16 k_i;
+
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<24;j+=2)
+		{			
+			k_i = ch[i]+j;			
+			kor_data[0] = KS_fontTable[k_i];		
+			kor_data[1] = KS_fontTable[k_i+1];		
+			
+			if(i==0)// 
+			{						
+				buf[j] = kor_data[0];
+				buf[j+1] &= 0x0F;
+				buf[j+1] |= kor_data[1]&0xF0;
+			}
+			else if(i==1)
+			{
+				buf[j+1] &= 0xF0;
+				buf[j+1] |= (kor_data[0]>>4)&0x0F;
+				buf[j+24] = (kor_data[0]<<4)|(kor_data[1]>>4);		
+			}
+			else if(i==2)
+			{			
+				buf[j+24+1] = kor_data[0];	
+				buf[j+48] &= 0x0F;
+				buf[j+48] |= kor_data[1] & 0xF0;						
+			}
+			else if(i==3)
+			{			
+				buf[48 +j] &= 0xF0;	
+				buf[48 +j] |= (kor_data[0]>>4)&0x0F;
+			
+				buf[48+j+1] = ((kor_data[0]<<4)&0xf0)|((kor_data[1]>>4)&0x0F);							
+			}
+			//buf[(i*24)+j] = KS_fontTable[ch2[i]+(j)];
+		}	
+	}	
+}
+
+/*
+6.16 test 한글출력팜수
+*/
+
+//void get_kor_test(u08* buf,char index,u16 ch2)
+void get_kor_test(u08* buf,char index,u16 *ch2,char len)
+{
+	char j;	
+	u16 k_i ;//= ch2+(index*2);
 	
+	for(j=0;j<len;j++)
+	{		
+		k_i = ch2[j]+(index*2);
+		
+		if(ch2[j]==0xffff)
+		{
+			buf[(j*2)] = 0;
+			buf[(j*2)+1] = 0;
+		}	
+		else{	
+			buf[(j*2)] = KS_fontTable[k_i];
+			buf[(j*2)+1] = KS_fontTable[k_i+1];
+		}
+	}	
+
+}
+/*
+	29일 테스트 함수 
+*/
+void get_kor_test2(u08* buf,char index,Kor_1word_Def *ch,char len)
+{
+	u16 k_i ;//= ch2+(index*2);
+	int i,j=0,k=0;
+	u08 kor_data[2];
 	char x=8;
 
-	for(j=0,i=0;j<24;j+=2,i++)
-	{	
-		if(flag) //ch[j].only_cho_flag)
+	for(j=0;j<len;j++)
+	{			
+		if(ch[j]->kor_font_addr==0xffff)
 		{
-			if(cho<=3)			
+			kor_data[0] = 0;
+			kor_data[1] = 0;
+			
+		}
+		else if(ch[j].only_cho_flag) 
+		{
+			if(ch[j].kor_sung_array[0]<=3)			
 				x=7;		
-			if(i>1 && i<x)
+			if(index>1 && index<x)
 			{
-				k_i = ch+j-4;
+				k_i = (ch[j]->kor_font_addr)+((index-2)*2);			
 				kor_data[0] = KS_fontTable[k_i];		
 				kor_data[1] = KS_fontTable[k_i+1];
 			}
@@ -191,72 +288,42 @@ char get_kor_fontdata(u08* buf,char index,u16 ch,char cho,char flag)
 			}
 		}
 		else
-		{		
-			k_i = ch+j;			
+		{
+			k_i = (ch[j]->kor_font_addr)+(index*2);			
 			kor_data[0] = KS_fontTable[k_i];		
-			kor_data[1] = KS_fontTable[k_i+1];		
-		}
-		if(index>=0) 
-		{		
-			buf[i*5 + index] = kor_data[0];
-			buf[(i*5)+1+index] &= 0x0F;
-			buf[(i*5)+1+index] |= kor_data[1]&0xF0;
+			kor_data[1] = KS_fontTable[k_i+1];
 			
 		}
-		else 
-		{
-			buf[bi+(i*5)] &= 0xF0;
-			buf[bi+(i*5)] |= (kor_data[0]>>4)&0x0F;
-			buf[bi+(i*5)+1] = (kor_data[0]<<4)|(kor_data[1]>>4);		
+		k =  j&0x03;
+		
 			
-		}
-	}	
-	if(index<0) bi++;
-	bi++;
-	
-	return index>=0?(bi*-1):bi;
-	
-}
-/*
-	7.10 한글,영문 저장 함수 
-*/
-
-char get_eng_fontdata(u08* buf,char index,char ch)
-{
-	char j,i;
-	char bi = index<0?(index*-1):index;
-	u08 tmp;
-	u08 kor_data;
-	u16 k_i;
-
-	for(i=0;i<12;i++)
-	{			
-		k_i = (ch-0x20)*12L+i;
-		//dst[i]= ASCII_fontTable[(buf[index+i]-0x20)*12L+line];
-		kor_data = ASCII_fontTable[k_i];		
-		
-		
-		if(index>=0) 
-		{		
-			buf[i*5 + index] = kor_data;	
-			buf[(i*5)+1+index] &= 0x0F;		
-		}
-		else 
+		if(k==0)// 
 		{
-			buf[bi+(i*5)] &= 0xF0;
-			buf[bi+(i*5)] |= (kor_data>>4)&0x0F;
-			//buf[bi+(i*5)+1] &= 0x0F;
-			buf[bi+(i*5)+1] = (kor_data<<4)&0xF0;			
+			buf[0] = kor_data[0];
+			buf[1] &= 0x0F;
+			buf[1] |= kor_data[1]&0xF0;
 		}
-	}	
-	
-	bi++;
-	
-	return index>=0?(bi):bi*-1;
+		else if(k==1)// 
+		{
+			buf[1] &= 0xF0;
+			buf[1] |= (kor_data[0]>>4)&0x0F;
+			buf[2] = (kor_data[0]<<4)|(kor_data[1]>>4);		
+		}
+		else if(k==2)
+		{	
+			if(index==11){
+				kor_data[0]=0xff;
+				kor_data[1]=0xff;
+			}
+			buf[3] = kor_data[0];	
+			buf[4] &= 0x0F;
+			buf[4] |= kor_data[1] & 0xF0;						
+		}
+		
+		
+	}//end for
 	
 }
-
-
 
 void get_kor_test3(u08* buf,char index,rom u16 *ch,char len,char font_index)
 {
@@ -324,3 +391,6 @@ void get_kor_test3(u08* buf,char index,rom u16 *ch,char len,char font_index)
 	}//end for
 	
 }
+
+
+

@@ -3,7 +3,6 @@
 // http://www.jooks8051.com.ne.kr/index.html  Program by gsjoo
 //--------------------------------------------------------------
 // ÆùÆ®: ±Ã¼­ Size: 9 
-#pragma romdata flash_eng = 0x0000E
 rom unsigned char ASCII_fontTable[]={	// Font Size: 7 X 12 
  // 0 [ ] 0x20 ------------------------ 
 	0x00,	// ....

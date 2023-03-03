@@ -37,8 +37,6 @@
 
 
 	enum{DISP_MODE,ENG_MODE,NUM_MODE,SPEC_MODE};
-	
-	u08 get_keyfunc();
 
 	void init_gpio(void);		
 	void delay (int del);
@@ -49,14 +47,12 @@
 	void init_Timer(void);
 	void key_read(char key_index);
 	// 6.22 키입력을 10ms단위의 타이머에게 전달..
-	void clr_def(Kor_1word_Def* key_data,char len);
-	
-	
+
+
 	u08 get_small_eng_font4Key(u08 key);
 	u08 get_big_eng_font4Key(u08 key);
 	u08 get_num_font4Key(u08 key);	
 	u16 get_kor_font4Key(u08 key,Kor_1word_Def* ch)	;
-
 	void ch_array(unsigned char* src, rom unsigned char *dst,int index);
 
 	void PutString(rom char *str,u08 line,char index,char len);
@@ -64,5 +60,4 @@
 	void dot_off();
 	void shitf_led_func2(u08 *src,char index);
 	word KStoDATA(word code);
-	char get_kor_fontdata2(u08* buf,Kor_1word_Def *fofont);
 #endif
